@@ -54,7 +54,7 @@ variable "custom_shell_commands" {
 }
 
 variable "temporary_security_group_source_public_ip" {
-  description = "When enabled, use public IP of the host (obtained from https://checkip.amazonaws.com) as CIDR block to be authorized access to the instance, when packer is creating a temporary security group."
+  description = "When enabled, use public IP of the host (obtained from https://checkip.amazonaws.com) as CIDR block to be authorized access to the instance, when packer is creating a temporary security group. Note: If you specify `security_group_id` then this input is ignored."
   type        = bool
   default     = false
 }
