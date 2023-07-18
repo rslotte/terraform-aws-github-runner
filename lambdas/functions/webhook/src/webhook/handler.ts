@@ -11,7 +11,7 @@ const supportedEvents = ['workflow_job'];
 const logger = createChildLogger('handler');
 
 export async function handle(headers: IncomingHttpHeaders, body: string): Promise<Response> {
-  const { environment, repositoryWhiteList, queuesConfig } = readEnvironmentVariables();
+  const { environment, branchWhiteList, repositoryWhiteList, queuesConfig } = readEnvironmentVariables();
 
   // ensure header keys lower case since github headers can contain capitals.
   for (const key in headers) {
@@ -64,6 +64,13 @@ export async function handle(headers: IncomingHttpHeaders, body: string): Promis
     };
   }
 
+  if (isBranchNotAllowed(payload.workflow_job.head_branch, branchWhiteList)) {
+    logger.error(`Received event from unauthorized branch ${payload.workflow_job.head_branch}`);
+    return {
+      statusCode: 403,
+    };
+  }
+
   logger.info(`Processing Github event`);
   logger.debug(`Queue configuration: ${queuesConfig}`);
 
@@ -80,11 +87,13 @@ async function sendWorkflowJobEvents(workflowEventPayload: WorkflowJobEvent) {
 
 function readEnvironmentVariables() {
   const environment = process.env.ENVIRONMENT;
+  const branchWhiteListEnv = process.env.BRANCH_WHITE_LIST || '[]';
+  const branchWhiteList = JSON.parse(branchWhiteListEnv) as Array<string>;
   const repositoryWhiteListEnv = process.env.REPOSITORY_WHITE_LIST || '[]';
   const repositoryWhiteList = JSON.parse(repositoryWhiteListEnv) as Array<string>;
   const queuesConfigEnv = process.env.RUNNER_CONFIG || '[]';
   const queuesConfig = JSON.parse(queuesConfigEnv) as Array<QueueConfig>;
-  return { environment, repositoryWhiteList, queuesConfig };
+  return { environment, branchWhiteList, repositoryWhiteList, queuesConfig };
 }
 
 async function verifySignature(githubEvent: string, headers: IncomingHttpHeaders, body: string): Promise<number> {
@@ -156,6 +165,10 @@ function getInstallationId(body: WorkflowJobEvent | CheckRunEvent) {
 
 function isRepoNotAllowed(repoFullName: string, repositoryWhiteList: string[]): boolean {
   return repositoryWhiteList.length > 0 && !repositoryWhiteList.includes(repoFullName);
+}
+
+function isBranchNotAllowed(branchName: string, branchWhiteList: string[]): boolean {
+  return branchWhiteList.length > 0 && !branchWhiteList.includes(branchName);
 }
 
 function canRunJob(

@@ -110,7 +110,7 @@ describe('handler', () => {
       expect(sendActionRequest).not.toBeCalled();
     });
 
-    it('does not handle workflow_job events from unlisted repositories', async () => {
+    it('does not handle workflow_job events from non whitelisted repositories', async () => {
       const event = JSON.stringify(workflowjob_event);
       process.env.REPOSITORY_WHITE_LIST = '["NotCodertocat/Hello-World"]';
       const resp = await handle(
@@ -135,6 +135,28 @@ describe('handler', () => {
     it('handles workflow_job events from whitelisted repositories', async () => {
       const event = JSON.stringify(workflowjob_event);
       process.env.REPOSITORY_WHITE_LIST = '["philips-labs/terraform-aws-github-runner"]';
+      const resp = await handle(
+        { 'X-Hub-Signature': await webhooks.sign(event), 'X-GitHub-Event': 'workflow_job' },
+        event,
+      );
+      expect(resp.statusCode).toBe(201);
+      expect(sendActionRequest).toBeCalled();
+    });
+
+    it('does not handle workflow_job events from non whitelisted branches', async () => {
+      const event = JSON.stringify(workflowjob_event);
+      process.env.BRANCH_WHITE_LIST = '["not-main"]';
+      const resp = await handle(
+        { 'X-Hub-Signature': await webhooks.sign(event), 'X-GitHub-Event': 'workflow_job' },
+        event,
+      );
+      expect(resp.statusCode).toBe(403);
+      expect(sendActionRequest).not.toBeCalled();
+    });
+
+    it('handles workflow_job events from whitelisted branches', async () => {
+      const event = JSON.stringify(workflowjob_event);
+      process.env.BRANCH_WHITE_LIST = '["main"]';
       const resp = await handle(
         { 'X-Hub-Signature': await webhooks.sign(event), 'X-GitHub-Event': 'workflow_job' },
         event,

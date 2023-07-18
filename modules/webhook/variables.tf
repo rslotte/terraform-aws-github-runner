@@ -122,6 +122,12 @@ variable "repository_white_list" {
   default     = []
 }
 
+variable "branch_white_list" {
+  description = "List of github branch names that will be allowed to use the github app. Leave empty for no filtering."
+  type        = list(string)
+  default     = []
+}
+
 variable "kms_key_arn" {
   description = "Optional CMK Key ARN to be used for Parameter Store."
   type        = string

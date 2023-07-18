@@ -17,6 +17,7 @@ resource "aws_lambda_function" "webhook" {
       LOG_LEVEL                           = var.log_level
       POWERTOOLS_LOGGER_LOG_EVENT         = var.log_level == "debug" ? "true" : "false"
       PARAMETER_GITHUB_APP_WEBHOOK_SECRET = var.github_app_parameters.webhook_secret.name
+      BRANCH_WHITE_LIST                   = jsonencode(var.branch_white_list)
       REPOSITORY_WHITE_LIST               = jsonencode(var.repository_white_list)
       RUNNER_CONFIG                       = jsonencode([for k, v in var.runner_config : v])
       SQS_WORKFLOW_JOB_QUEUE              = try(var.sqs_workflow_job_queue, null) != null ? var.sqs_workflow_job_queue.id : ""

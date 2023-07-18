@@ -15,6 +15,7 @@
     "name": "build",
     "steps": [],
     "check_run_url": "https://api.github.com/repos/philips-labs/terraform-aws-github-runner/check-runs/3169272040",
+    "head_branch": "main",
     "labels": [
       "self-hosted"
     ]
